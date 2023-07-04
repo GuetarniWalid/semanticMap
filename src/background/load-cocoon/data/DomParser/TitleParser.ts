@@ -40,6 +40,8 @@ export class TitleParser {
   }
 
   private getInnerText(element: domhandlerElement): string {
-    return domutils.textContent(element);
+    const innerText = domutils.textContent(element);
+    const textCleaned = innerText.trim();
+    return textCleaned;
   }
 }

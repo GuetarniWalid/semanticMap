@@ -36,82 +36,104 @@ export class Fetcher {
 
   private async formatResponse(response: Response): Promise<ResponseData> {
     return {
+      url: this.url,
       html: response.ok ? await response.text() : '',
       error: !response.ok,
       status: this.statusDescription(response.status),
     };
   }
 
-  private statusDescription(statusCode: number) {
-    let title, explanation;
+  private statusDescription(statusCode: number): PageStatus {
+    let title: string, explanation: string, state: 'done' | 'error';
 
     switch (statusCode) {
       case 200:
+        state = 'done';
         title = 'OK';
-        explanation = 'La requête a été traitée avec succès. Tout va bien !';
-        break;
-
-      case 201:
-        title = 'Créé';
-        explanation =
-          'La requête a été traitée avec succès et une nouvelle ressource a été créée.';
-        break;
-
-      case 204:
-        title = 'Aucun contenu';
-        explanation =
-          "La requête a été traitée avec succès, mais il n'y a pas de contenu à renvoyer.";
+        explanation = 'La requête a été traitée avec succès.';
         break;
 
       case 301:
+        state = 'done';
         title = 'Déplacé de façon permanente';
         explanation =
-          'La ressource demandée a été déplacée de manière permanente vers une nouvelle URL. La nouvelle URL est fournie dans la réponse.';
+          'La ressource demandée a été déplacée de manière permanente vers une nouvelle URL.';
         break;
 
       case 302:
+        state = 'done';
         title = 'Déplacé de façon temporaire';
         explanation =
-          'La ressource demandée a été déplacée de manière temporaire vers une nouvelle URL. La nouvelle URL est fournie dans la réponse.';
+          'La ressource demandée a été déplacée de manière temporaire vers une nouvelle URL.';
         break;
 
       case 400:
+        state = 'error';
         title = 'Requête incorrecte';
         explanation =
-          "La requête était mal formée ou n'a pas pu être traitée en raison d'une erreur du client. Il y a une erreur quelque part dans la requête envoyée par le navigateur.";
+          "La requête était mal formée ou n'a pas pu être traitée en raison d'une error du client.";
         break;
 
       case 401:
+        state = 'error';
         title = 'Non autorisé';
         explanation =
-          "L'utilisateur n'est pas autorisé à accéder à la ressource demandée. Il doit s'authentifier auprès du serveur pour accéder à la ressource.";
+          'Une authentification est nécessaire pour accéder à la ressource.';
         break;
 
       case 403:
+        state = 'error';
         title = 'Interdit';
         explanation =
-          "L'utilisateur n'est pas autorisé à accéder à la ressource demandée, même si l'authentification a été fournie. L'utilisateur n'a pas les autorisations nécessaires pour accéder à la ressource.";
+          "Le serveur a compris la requête, mais refuse de l'exécuter.";
         break;
 
       case 404:
+        state = 'error';
         title = 'Introuvable';
-        explanation =
-          "La ressource demandée n'a pas été trouvée sur le serveur. Le serveur n'a pas pu trouver ce que le navigateur cherche.";
+        explanation = 'Ressource non trouvée.';
+        break;
+
+      case 429:
+        state = 'error';
+        title = 'Trop de requêtes';
+        explanation = 'Le client a émis trop de requêtes dans un délai donné.';
         break;
 
       case 500:
-        title = 'Erreur interne du serveur';
+        state = 'error';
+        title = 'Erreur serveur';
+        explanation = 'Erreur interne du serveur.';
+        break;
+
+      case 502:
+        state = 'error';
+        title = 'Mauvaise passerelle';
         explanation =
-          "Une erreur s'est produite sur le serveur lors du traitement de la requête. Il y a une erreur quelque part sur le serveur.";
+          'En agissant en tant que serveur proxy ou passerelle, le serveur a reçu une réponse invalide depuis le serveur distant.';
+        break;
+
+      case 503:
+        state = 'error';
+        title = 'Service indisponible';
+        explanation = 'Service temporairement indisponible ou en maintenance.';
+        break;
+
+      case 504:
+        state = 'error';
+        title = 'Délai d’attente dépassé';
+        explanation =
+          'Temps d’attente d’une réponse d’un serveur à un serveur intermédiaire écoulé.';
         break;
 
       default:
+        state = 'error';
         title = "Code d'état non reconnu";
         explanation = "Le code d'état fourni n'est pas reconnu.";
         break;
     }
 
-    return { title, explanation, code: statusCode };
+    return { state, title, explanation, code: statusCode };
   }
 
   private ParseHtmlString(html: string) {

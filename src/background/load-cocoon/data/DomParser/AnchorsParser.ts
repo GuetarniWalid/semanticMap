@@ -1,6 +1,6 @@
 import type { Document as customDocument } from 'domhandler/lib/node';
 import * as domutils from 'domutils';
-import { getProtocol } from '@src/utils';
+import { getProtocol } from '../utils';
 
 export class AnchorsParser {
   private _outgoingAnchors: domutilsElementList;
@@ -16,8 +16,8 @@ export class AnchorsParser {
     this._outgoingAnchors = this.getOutgoingAnchors(allAnchors);
   }
 
-  get anchors() {
-    return this._outgoingAnchors.map(anchor => {
+  public getAnchors(filter: 'all' | 'external' | 'internal' = 'all') {
+    const anchors = this._outgoingAnchors.map(anchor => {
       const { destination, destinationName, isSameSite } =
         this.getDestinationData(anchor);
       return {
@@ -27,6 +27,10 @@ export class AnchorsParser {
         destinationName,
       };
     });
+    if (filter === 'all') return anchors;
+    if (filter === 'external')
+      return anchors.filter(anchor => !anchor.sameSite);
+    if (filter === 'internal') return anchors.filter(anchor => anchor.sameSite);
   }
 
   private getAllAnchors(dom: customDocument) {

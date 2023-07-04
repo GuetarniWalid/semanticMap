@@ -7,13 +7,10 @@ declare global {
   type domutilsElement = domutilsElementList[number];
 
   type ResponseData = {
+    url: string;
     html: string;
     error: boolean;
-    status: {
-      title: string;
-      explanation: string;
-      code: number;
-    };
+    status: PageStatus;
   };
 
   type FinalResponse = ResponseData & {
@@ -28,7 +25,7 @@ declare global {
     destinationName: string;
   }[];
 
-  interface Page {
+  interface PageDom {
     url: string;
     titles: {
       h1: string[];
@@ -41,25 +38,16 @@ declare global {
     anchors: Anchors;
   }
 
-  interface TreeNode {
-    name?: string;
-    children?: TreeNode[] | null;
+  type Page = PageDom & { status: PageStatus };
+
+  interface PageStatus {
+    state: 'pending' | 'done' | 'error';
+    title: string;
+    explanation: string;
+    code: number;
   }
 
-  type TreePage = {
-    url: string;
-    title: string;
-    linkToBrothers: string[];
-    isLinkedToParent: boolean;
-    state: 'pending' | 'done' | 'error';
-  };
-
-  type TreeDepth = {
+  interface TreePages {
     [pageName: string]: TreePage;
-  };
-
-  type PagesTree = {
-    [depthName: string]: TreeDepth;
-    index: { [pageUrl: string]: TreePage };
-  };
+  }
 }
